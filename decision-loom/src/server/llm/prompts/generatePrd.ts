@@ -4,7 +4,8 @@ import { SECTIONS } from "@/content/questions";
 export function buildGeneratePrdPrompt(
   title: string | null,
   answers: SectionAnswer[],
-  summaries: SectionSummary[]
+  summaries: SectionSummary[],
+  productDescription?: string
 ): { system: string; user: string } {
   const system = `You are a product requirements document generator. Your task is to transform structured product thinking into a comprehensive, professional PRD.
 
@@ -88,7 +89,7 @@ Guidelines:
 
   const user = `# Product: ${title || "Untitled Product"}
 
-## Section Summaries
+${productDescription ? `## Product Description\n${productDescription}\n\n` : ""}## Section Summaries
 ${summariesText}
 
 ## Detailed Answers

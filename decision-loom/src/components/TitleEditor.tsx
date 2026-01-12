@@ -32,12 +32,12 @@ export function TitleEditor() {
           onChange={(e) => setEditValue(e.target.value)}
           onKeyDown={handleKeyDown}
           onBlur={handleSave}
-          className="h-8 w-64"
+          className="h-8 w-64 rounded-none border-0 border-b-2 border-[rgba(28,28,28,0.15)] bg-transparent px-0 py-1 font-['Libre_Baskerville',serif] text-xl text-[#1C1C1C] placeholder:text-[rgba(28,28,28,0.4)] focus-visible:border-[#8C7B50] focus-visible:ring-0"
           autoFocus
         />
         <button
           onClick={handleSave}
-          className="rounded p-1 hover:bg-muted"
+          className="rounded-none p-1 text-[#8C7B50] opacity-60 hover:opacity-100"
         >
           <Check className="h-4 w-4" />
         </button>
@@ -51,10 +51,10 @@ export function TitleEditor() {
         setEditValue(title);
         setIsEditing(true);
       }}
-      className="flex items-center gap-2 rounded px-2 py-1 hover:bg-muted"
+      className="group flex items-center gap-2 rounded-none px-2 py-1 transition-opacity hover:opacity-80"
     >
-      <span className="font-medium">{title || "Untitled Product"}</span>
-      <Pencil className="h-3 w-3 text-muted-foreground" />
+      <span className="font-['Libre_Baskerville',serif] text-xl font-normal text-[#1C1C1C]">{title || "Untitled Product"}</span>
+      <Pencil className="h-3 w-3 text-[#8C7B50] opacity-0 transition-opacity group-hover:opacity-60" />
     </button>
   );
 }

@@ -3,6 +3,12 @@ import { persist } from "zustand/middleware";
 import type { SectionKey, QAItem, Artifact, Suggestion } from "@/types/core";
 import { SECTIONS, SECTION_ORDER } from "@/content/questions";
 
+interface ChatMessage {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+}
+
 interface SessionState {
   sessionId: string | null;
   title: string;
@@ -15,6 +21,26 @@ interface SessionState {
   suggestions: Suggestion[];
   isLoading: boolean;
   error: string | null;
+  productDescription: string;
+  hasStarted: boolean;
+  // Prefill loading state
+  isPrefilling: boolean;
+  prefillError: string | null;
+  // Artifact View
+  isArtifactExpanded: boolean;
+  isGenerating: boolean;
+  streamingContent: string;
+  // Chat refinement state
+  chatMessages: ChatMessage[];
+  isChatOpen: boolean;
+  // Reflection modal state
+  prdCopied: boolean;
+  techSpecCopied: boolean;
+  prdDownloaded: boolean;
+  techSpecDownloaded: boolean;
+  reflectionContent: string | null;
+  isReflectionModalOpen: boolean;
+  reflectionExpanded: boolean;
 }
 
 interface SessionActions {
@@ -31,10 +57,37 @@ interface SessionActions {
   clearSuggestions: () => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
+  setProductDescription: (description: string) => void;
+  setHasStarted: (started: boolean) => void;
+  // Prefill actions
+  setIsPrefilling: (prefilling: boolean) => void;
+  setPrefillError: (error: string | null) => void;
+  startPrefill: (description: string) => Promise<void>;
   getNextSection: () => SectionKey | null;
   getPrevSection: () => SectionKey | null;
   getProgress: () => { completed: number; total: number };
   reset: () => void;
+  // Artifact View actions
+  toggleArtifactExpansion: () => void;
+  setArtifactExpanded: (expanded: boolean) => void;
+  // Streaming actions
+  setIsGenerating: (generating: boolean) => void;
+  setStreamingContent: (content: string) => void;
+  appendStreamingContent: (chunk: string) => void;
+  // Chat actions
+  addChatMessage: (message: ChatMessage) => void;
+  updateLastChatMessage: (content: string) => void;
+  clearChatMessages: () => void;
+  setIsChatOpen: (open: boolean) => void;
+  // Reflection actions
+  setPrdCopied: (copied: boolean) => void;
+  setTechSpecCopied: (copied: boolean) => void;
+  setPrdDownloaded: (downloaded: boolean) => void;
+  setTechSpecDownloaded: (downloaded: boolean) => void;
+  setReflectionContent: (content: string | null) => void;
+  setIsReflectionModalOpen: (open: boolean) => void;
+  setReflectionExpanded: (expanded: boolean) => void;
+  hasBothArtifactsExported: () => boolean;
 }
 
 type SessionStore = SessionState & SessionActions;
@@ -66,6 +119,22 @@ const initialState: SessionState = {
   suggestions: [],
   isLoading: false,
   error: null,
+  productDescription: "",
+  hasStarted: false,
+  isPrefilling: false,
+  prefillError: null,
+  isArtifactExpanded: false,
+  isGenerating: false,
+  streamingContent: "",
+  chatMessages: [],
+  isChatOpen: false,
+  prdCopied: false,
+  techSpecCopied: false,
+  prdDownloaded: false,
+  techSpecDownloaded: false,
+  reflectionContent: null,
+  isReflectionModalOpen: false,
+  reflectionExpanded: false,
 };
 
 export const useSessionStore = create<SessionStore>()(
@@ -125,6 +194,46 @@ export const useSessionStore = create<SessionStore>()(
 
       setError: (error) => set({ error }),
 
+      setProductDescription: (description) => set({ productDescription: description }),
+
+      setHasStarted: (started) => set({ hasStarted: started }),
+
+      // Prefill actions
+      setIsPrefilling: (prefilling) => set({ isPrefilling: prefilling }),
+      setPrefillError: (error) => set({ prefillError: error }),
+      startPrefill: async (description: string) => {
+        set({ isPrefilling: true, prefillError: null });
+        try {
+          const response = await fetch("/api/generate/prefill", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ description }),
+          });
+
+          if (!response.ok) throw new Error("Failed to prefill answers");
+
+          const data = await response.json();
+
+          if (data.ok && data.data.answers) {
+            const answers = data.data.answers as Record<SectionKey, { qa: QAItem[] }>;
+            for (const [sectionKey, sectionData] of Object.entries(answers)) {
+              for (const qaItem of sectionData.qa) {
+                get().updateAnswer(
+                  sectionKey as SectionKey,
+                  qaItem.questionId,
+                  qaItem.answer
+                );
+              }
+            }
+          }
+        } catch (error) {
+          console.error("Error prefilling:", error);
+          set({ prefillError: "Failed to generate initial answers. Please try again." });
+        } finally {
+          set({ isPrefilling: false });
+        }
+      },
+
       getNextSection: () => {
         const { activeKey } = get();
         const currentIndex = SECTION_ORDER.indexOf(activeKey);
@@ -152,6 +261,47 @@ export const useSessionStore = create<SessionStore>()(
       },
 
       reset: () => set({ ...initialState, answersByKey: initialAnswers() }),
+
+      // Artifact View actions
+      toggleArtifactExpansion: () =>
+        set((state) => ({ isArtifactExpanded: !state.isArtifactExpanded })),
+      setArtifactExpanded: (expanded) => set({ isArtifactExpanded: expanded }),
+
+      // Streaming actions
+      setIsGenerating: (generating) => set({ isGenerating: generating }),
+      setStreamingContent: (content) => set({ streamingContent: content }),
+      appendStreamingContent: (chunk) =>
+        set((state) => ({ streamingContent: state.streamingContent + chunk })),
+
+      // Chat actions
+      addChatMessage: (message) =>
+        set((state) => ({ chatMessages: [...state.chatMessages, message] })),
+      updateLastChatMessage: (content) =>
+        set((state) => {
+          const messages = [...state.chatMessages];
+          if (messages.length > 0) {
+            messages[messages.length - 1] = {
+              ...messages[messages.length - 1],
+              content,
+            };
+          }
+          return { chatMessages: messages };
+        }),
+      clearChatMessages: () => set({ chatMessages: [] }),
+      setIsChatOpen: (open) => set({ isChatOpen: open }),
+
+      // Reflection actions
+      setPrdCopied: (copied) => set({ prdCopied: copied }),
+      setTechSpecCopied: (copied) => set({ techSpecCopied: copied }),
+      setPrdDownloaded: (downloaded) => set({ prdDownloaded: downloaded }),
+      setTechSpecDownloaded: (downloaded) => set({ techSpecDownloaded: downloaded }),
+      setReflectionContent: (content) => set({ reflectionContent: content }),
+      setIsReflectionModalOpen: (open) => set({ isReflectionModalOpen: open }),
+      setReflectionExpanded: (expanded) => set({ reflectionExpanded: expanded }),
+      hasBothArtifactsExported: () => {
+        const { prdCopied, techSpecCopied, prdDownloaded, techSpecDownloaded } = get();
+        return (prdCopied || prdDownloaded) && (techSpecCopied || techSpecDownloaded);
+      },
     }),
     {
       name: "decision-loom-session",
@@ -164,6 +314,8 @@ export const useSessionStore = create<SessionStore>()(
         completedSections: Array.from(state.completedSections),
         prdArtifact: state.prdArtifact,
         techSpecArtifact: state.techSpecArtifact,
+        productDescription: state.productDescription,
+        hasStarted: state.hasStarted,
       }),
       onRehydrateStorage: () => (state) => {
         if (state && Array.isArray(state.completedSections)) {

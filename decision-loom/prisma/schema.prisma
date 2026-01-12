@@ -8,12 +8,13 @@ datasource db {
 }
 
 model Session {
-  id        String   @id @default(cuid())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  expiresAt DateTime
-  title     String?
-  activeKey String   @default("CONTEXT")
+  id                  String   @id @default(cuid())
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  expiresAt           DateTime
+  title               String?
+  activeKey           String   @default("CONTEXT")
+  productDescription  String?
 
   sections  SectionAnswer[]
   summaries SectionSummary[]

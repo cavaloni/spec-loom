@@ -10,6 +10,13 @@ const config: Config = {
   theme: {
   	extend: {
   		colors: {
+  			bone: '#F9F7F2',
+  			ink: '#1C1C1C',
+  			stone: '#E5E2DB',
+  			charcoal: '#2D2D2B',
+  			vellum: '#FDFCF9',
+  			'gold-leaf': '#8C7B50',
+  			'border-ink': 'rgba(28, 28, 28, 0.15)',
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
   			card: {
@@ -42,19 +49,24 @@ const config: Config = {
   			},
   			border: 'hsl(var(--border))',
   			input: 'hsl(var(--input))',
-  			ring: 'hsl(var(--ring))',
-  			chart: {
-  				'1': 'hsl(var(--chart-1))',
-  				'2': 'hsl(var(--chart-2))',
-  				'3': 'hsl(var(--chart-3))',
-  				'4': 'hsl(var(--chart-4))',
-  				'5': 'hsl(var(--chart-5))'
-  			}
+  			ring: 'hsl(var(--ring))'
   		},
   		borderRadius: {
-  			lg: 'var(--radius)',
-  			md: 'calc(var(--radius) - 2px)',
-  			sm: 'calc(var(--radius) - 4px)'
+  			lg: '0px',
+  			md: '0px',
+  			sm: '0px',
+  			DEFAULT: '0px'
+  		},
+  		boxShadow: {
+  			sm: 'none',
+  			DEFAULT: 'none',
+  			md: '0 10px 30px rgba(0,0,0,0.02)',
+  			lg: 'none'
+  		},
+  		fontFamily: {
+  			heading: ['Libre Baskerville', 'Georgia', 'serif'],
+  			sans: ['Inter', 'system-ui', 'sans-serif'],
+  			mono: ['JetBrains Mono', 'monospace']
   		}
   	}
   },

@@ -4,7 +4,8 @@ import { getSection } from "@/content/questions";
 export function buildSuggestPrompt(
   sectionKey: SectionKey,
   currentText: string,
-  priorSummaries: Record<string, string>
+  priorSummaries: Record<string, string>,
+  productDescription?: string
 ): { system: string; user: string } {
   const section = getSection(sectionKey);
 
@@ -27,7 +28,7 @@ Guidelines:
 Current section: ${section.label}
 Section goal: ${section.goal}`;
 
-  const user = `${priorContext ? `## Prior Context\n${priorContext}\n\n` : ""}## Current Input
+  const user = `${productDescription ? `## Product Description\n${productDescription}\n\n` : ""}${priorContext ? `## Prior Context\n${priorContext}\n\n` : ""}## Current Input
 ${currentText}
 
 Provide 3-5 suggestions to help improve this thinking. Format as JSON array:

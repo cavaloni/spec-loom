@@ -5,6 +5,7 @@ let redis: Redis | null = null;
 let suggestLimiter: Ratelimit | null = null;
 let summarizeLimiter: Ratelimit | null = null;
 let generateLimiter: Ratelimit | null = null;
+let refineLimiter: Ratelimit | null = null;
 
 function initRateLimiters() {
   if (
@@ -39,12 +40,19 @@ function initRateLimiters() {
     analytics: true,
     prefix: "ratelimit:generate",
   });
+
+  refineLimiter = new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(20, "1 m"),
+    analytics: true,
+    prefix: "ratelimit:refine",
+  });
 }
 
 initRateLimiters();
 
 export async function checkRateLimit(
-  type: "suggest" | "summarize" | "generate",
+  type: "suggest" | "summarize" | "generate" | "refine",
   identifier: string
 ): Promise<{ success: boolean; remaining: number }> {
   const limiter =
@@ -52,7 +60,9 @@ export async function checkRateLimit(
       ? suggestLimiter
       : type === "summarize"
         ? summarizeLimiter
-        : generateLimiter;
+        : type === "refine"
+          ? refineLimiter
+          : generateLimiter;
 
   if (!limiter) {
     return { success: true, remaining: -1 };

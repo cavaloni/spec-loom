@@ -76,7 +76,8 @@ export async function POST(request: NextRequest) {
     const { system, user } = buildGeneratePrdPrompt(
       session.title,
       answers,
-      summaries
+      summaries,
+      session.productDescription || undefined
     );
 
     const model =

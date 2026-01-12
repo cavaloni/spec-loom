@@ -79,7 +79,8 @@ export async function POST(request: NextRequest) {
     const { system, user } = buildSuggestPrompt(
       key as SectionKey,
       currentText,
-      priorSummaries
+      priorSummaries,
+      session.productDescription || undefined
     );
 
     const model =
