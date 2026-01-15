@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { checkRateLimit } from "@/lib/ratelimit";
 import { generateCompletion } from "@/server/llm/client";
 import { buildGeneratePrdPrompt } from "@/server/llm/prompts/generatePrd";
+import { createRequestLogger } from "@/lib/logger";
+import { getRequestId } from "@/lib/request-id";
 import type { ApiResponse, SectionAnswer, SectionSummary, Artifact, QAItem, SectionKey } from "@/types/core";
 
 const generatePrdSchema = z.object({
@@ -11,8 +13,12 @@ const generatePrdSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
+  const requestId = getRequestId(request);
+  const ip = request.headers.get("x-forwarded-for") || "anonymous";
+  const log = createRequestLogger({ requestId, route: "generate-prd", ip });
+
   try {
-    const ip = request.headers.get("x-forwarded-for") || "anonymous";
+    log.info({ event: "generate-prd.start" });
     const rateLimit = await checkRateLimit("generate", ip);
 
     if (!rateLimit.success) {
@@ -82,7 +88,13 @@ export async function POST(request: NextRequest) {
 
     const model =
       process.env.OPENROUTER_MODEL_GENERATE || "anthropic/claude-3.5-sonnet";
-    const contentMd = await generateCompletion(model, system, user, 8000);
+    log.info({ event: "generate-prd.llm.start", model });
+    const contentMd = await generateCompletion(model, system, user, 8000, {
+      requestId,
+      route: "generate-prd",
+      sessionId,
+    });
+    log.info({ event: "generate-prd.llm.done", contentLength: contentMd.length });
 
     const artifact = await prisma.artifact.upsert({
       where: {
@@ -111,9 +123,13 @@ export async function POST(request: NextRequest) {
       },
     };
 
-    return NextResponse.json(response);
+    log.info({ event: "generate-prd.success" });
+    return NextResponse.json(response, {
+      headers: { "x-request-id": requestId },
+    });
   } catch (error) {
-    console.error("Error generating PRD:", error);
+    const errMsg = error instanceof Error ? error.message : String(error);
+    log.error({ event: "generate-prd.error", error: errMsg });
     const response: ApiResponse<never> = {
       ok: false,
       error: {
@@ -121,6 +137,9 @@ export async function POST(request: NextRequest) {
         message: "Failed to generate PRD",
       },
     };
-    return NextResponse.json(response, { status: 500 });
+    return NextResponse.json(response, {
+      status: 500,
+      headers: { "x-request-id": requestId },
+    });
   }
 }

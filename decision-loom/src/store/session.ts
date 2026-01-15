@@ -204,13 +204,29 @@ export const useSessionStore = create<SessionStore>()(
       startPrefill: async (description: string) => {
         set({ isPrefilling: true, prefillError: null });
         try {
+          const controller = new AbortController();
+          const timeoutMs = 120_000;
+          const timer = setTimeout(() => controller.abort(), timeoutMs);
+
           const response = await fetch("/api/generate/prefill", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ description }),
+            signal: controller.signal,
           });
 
-          if (!response.ok) throw new Error("Failed to prefill answers");
+          clearTimeout(timer);
+
+          if (!response.ok) {
+            let serverMessage = "Failed to prefill answers";
+            try {
+              const maybeJson = await response.json();
+              if (maybeJson?.error?.message) serverMessage = maybeJson.error.message;
+            } catch {
+              // ignore
+            }
+            throw new Error(serverMessage);
+          }
 
           const data = await response.json();
 
@@ -228,7 +244,8 @@ export const useSessionStore = create<SessionStore>()(
           }
         } catch (error) {
           console.error("Error prefilling:", error);
-          set({ prefillError: "Failed to generate initial answers. Please try again." });
+          const msg = error instanceof Error ? error.message : "Failed to generate initial answers. Please try again.";
+          set({ prefillError: msg || "Failed to generate initial answers. Please try again." });
         } finally {
           set({ isPrefilling: false });
         }

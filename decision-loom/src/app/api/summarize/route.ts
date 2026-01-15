@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { checkRateLimit } from "@/lib/ratelimit";
 import { generateCompletion } from "@/server/llm/client";
 import { buildSummarizePrompt } from "@/server/llm/prompts/summarize";
+import { createRequestLogger } from "@/lib/logger";
+import { getRequestId } from "@/lib/request-id";
 import type { ApiResponse, SectionKey, QAItem } from "@/types/core";
 
 const summarizeSchema = z.object({
@@ -21,8 +23,12 @@ const summarizeSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
+  const requestId = getRequestId(request);
+  const ip = request.headers.get("x-forwarded-for") || "anonymous";
+  const log = createRequestLogger({ requestId, route: "summarize", ip });
+
   try {
-    const ip = request.headers.get("x-forwarded-for") || "anonymous";
+    log.info({ event: "summarize.start" });
     const rateLimit = await checkRateLimit("summarize", ip);
 
     if (!rateLimit.success) {
@@ -82,7 +88,11 @@ export async function POST(request: NextRequest) {
 
     const model =
       process.env.OPENROUTER_MODEL_SUMMARY || "anthropic/claude-3.5-sonnet";
-    const summary = await generateCompletion(model, system, user, 500);
+    const summary = await generateCompletion(model, system, user, 500, {
+      requestId,
+      route: "summarize",
+      sessionId,
+    });
 
     await prisma.sectionSummary.upsert({
       where: {
@@ -106,9 +116,13 @@ export async function POST(request: NextRequest) {
       data: { summary: summary.trim() },
     };
 
-    return NextResponse.json(response);
+    log.info({ event: "summarize.success", key });
+    return NextResponse.json(response, {
+      headers: { "x-request-id": requestId },
+    });
   } catch (error) {
-    console.error("Error generating summary:", error);
+    const errMsg = error instanceof Error ? error.message : String(error);
+    log.error({ event: "summarize.error", error: errMsg });
     const response: ApiResponse<never> = {
       ok: false,
       error: {
@@ -116,6 +130,9 @@ export async function POST(request: NextRequest) {
         message: "Failed to generate summary",
       },
     };
-    return NextResponse.json(response, { status: 500 });
+    return NextResponse.json(response, {
+      status: 500,
+      headers: { "x-request-id": requestId },
+    });
   }
 }

@@ -3,6 +3,8 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit } from "@/lib/ratelimit";
 import { generateCompletion } from "@/server/llm/client";
+import { createRequestLogger } from "@/lib/logger";
+import { getRequestId } from "@/lib/request-id";
 import type { ApiResponse } from "@/types/core";
 
 const generateReflectionSchema = z.object({
@@ -10,8 +12,12 @@ const generateReflectionSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
+  const requestId = getRequestId(request);
+  const ip = request.headers.get("x-forwarded-for") || "anonymous";
+  const log = createRequestLogger({ requestId, route: "generate-reflection", ip });
+
   try {
-    const ip = request.headers.get("x-forwarded-for") || "anonymous";
+    log.info({ event: "generate-reflection.start" });
     const rateLimit = await checkRateLimit("generate", ip);
 
     if (!rateLimit.success) {
@@ -134,7 +140,13 @@ Provide 2-3 reframes that challenge assumptions.
 Keep all responses concise and actionable. No lengthy explanations.`;
 
     const model = process.env.OPENROUTER_MODEL_REFLECT || "google/gemini-3-pro-preview";
-    const contentMd = await generateCompletion(model, system, user, 6000);
+    log.info({ event: "generate-reflection.llm.start", model });
+    const contentMd = await generateCompletion(model, system, user, 6000, {
+      requestId,
+      route: "generate-reflection",
+      sessionId,
+    });
+    log.info({ event: "generate-reflection.llm.done", contentLength: contentMd.length });
 
     const response: ApiResponse<{ content: string }> = {
       ok: true,
@@ -143,9 +155,13 @@ Keep all responses concise and actionable. No lengthy explanations.`;
       },
     };
 
-    return NextResponse.json(response);
+    log.info({ event: "generate-reflection.success" });
+    return NextResponse.json(response, {
+      headers: { "x-request-id": requestId },
+    });
   } catch (error) {
-    console.error("Error generating reflection:", error);
+    const errMsg = error instanceof Error ? error.message : String(error);
+    log.error({ event: "generate-reflection.error", error: errMsg });
     const response: ApiResponse<never> = {
       ok: false,
       error: {
@@ -153,6 +169,9 @@ Keep all responses concise and actionable. No lengthy explanations.`;
         message: "Failed to generate reflections",
       },
     };
-    return NextResponse.json(response, { status: 500 });
+    return NextResponse.json(response, {
+      status: 500,
+      headers: { "x-request-id": requestId },
+    });
   }
 }

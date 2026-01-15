@@ -22,26 +22,19 @@ export function CoreflowLoader() {
   const { isPrefilling } = useSessionStore();
   const [currentStep, setCurrentStep] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
-  const [hasCompletedMinTime, setHasCompletedMinTime] = useState(false);
-  const hasStartedRef = useRef(false);
 
-  // Show loader when prefilling starts
   useEffect(() => {
-    if (isPrefilling && !hasStartedRef.current) {
-      hasStartedRef.current = true;
+    if (isPrefilling) {
       setIsVisible(true);
-      setHasCompletedMinTime(false);
-      
-      // Start minimum time timer
-      const timer = setTimeout(() => {
-        setHasCompletedMinTime(true);
-      }, MIN_DISPLAY_TIME);
-      
-      return () => clearTimeout(timer);
+
+      const hideTimer = setTimeout(() => {
+        setIsVisible(false);
+      }, MIN_DISPLAY_TIME + 500);
+
+      return () => clearTimeout(hideTimer);
     }
   }, [isPrefilling]);
 
-  // Cycle through steps
   useEffect(() => {
     if (!isVisible) return;
 
@@ -51,17 +44,6 @@ export function CoreflowLoader() {
 
     return () => clearInterval(interval);
   }, [isVisible]);
-
-  // Hide when prefilling is done AND minimum time has passed
-  useEffect(() => {
-    if (!isPrefilling && hasCompletedMinTime && isVisible) {
-      // Add a small delay for smooth transition
-      const timer = setTimeout(() => {
-        setIsVisible(false);
-      }, 500);
-      return () => clearTimeout(timer);
-    }
-  }, [isPrefilling, hasCompletedMinTime, isVisible]);
 
   if (!isVisible) return null;
 

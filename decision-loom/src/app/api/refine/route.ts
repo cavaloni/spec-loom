@@ -3,6 +3,8 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit } from "@/lib/ratelimit";
 import { generateChatStream } from "@/server/llm/client";
+import { createRequestLogger } from "@/lib/logger";
+import { getRequestId } from "@/lib/request-id";
 import type { ChatCompletionMessageParam } from "openai/resources/chat/completions";
 
 const refineSchema = z.object({
@@ -12,8 +14,12 @@ const refineSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
+  const requestId = getRequestId(request);
+  const ip = request.headers.get("x-forwarded-for") || "anonymous";
+  const log = createRequestLogger({ requestId, route: "refine", ip });
+
   try {
-    const ip = request.headers.get("x-forwarded-for") || "anonymous";
+    log.info({ event: "refine.start" });
     const rateLimit = await checkRateLimit("refine", ip);
 
     if (!rateLimit.success) {
@@ -118,15 +124,23 @@ Keep your responses focused and actionable.`;
 
     const encoder = new TextEncoder();
 
+    log.info({ event: "refine.llm.start", model, artifactType });
+
     const stream = new ReadableStream({
       async start(controller) {
         try {
-          for await (const chunk of generateChatStream(model, messages, 4000)) {
+          for await (const chunk of generateChatStream(model, messages, 4000, {
+            requestId,
+            route: "refine",
+            sessionId,
+          })) {
             controller.enqueue(encoder.encode(chunk));
           }
+          log.info({ event: "refine.success" });
           controller.close();
         } catch (error) {
-          console.error("Streaming error:", error);
+          const errMsg = error instanceof Error ? error.message : String(error);
+          log.error({ event: "refine.stream.error", error: errMsg });
           controller.error(error);
         }
       },
@@ -138,10 +152,12 @@ Keep your responses focused and actionable.`;
         "Transfer-Encoding": "chunked",
         "Cache-Control": "no-cache",
         Connection: "keep-alive",
+        "x-request-id": requestId,
       },
     });
   } catch (error) {
-    console.error("Error in refine endpoint:", error);
+    const errMsg = error instanceof Error ? error.message : String(error);
+    log.error({ event: "refine.error", error: errMsg });
     return NextResponse.json(
       {
         ok: false,
@@ -150,7 +166,10 @@ Keep your responses focused and actionable.`;
           message: "Failed to process refinement request",
         },
       },
-      { status: 500 }
+      {
+        status: 500,
+        headers: { "x-request-id": requestId },
+      }
     );
   }
 }
