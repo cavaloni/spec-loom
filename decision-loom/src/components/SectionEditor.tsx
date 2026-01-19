@@ -2,7 +2,7 @@
 
 import { useCallback, useRef, useState } from "react";
 import { useSessionStore } from "@/store/session";
-import { getSection } from "@/content/questions";
+import { getSectionWithFilteredQuestions } from "@/content/questions";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,6 +21,7 @@ export function SectionEditor() {
   const {
     sessionId,
     activeKey,
+    projectScope,
     answersByKey,
     summariesByKey,
     completedSections,
@@ -40,7 +41,7 @@ export function SectionEditor() {
     getPrevSection,
   } = useSessionStore();
 
-  const section = getSection(activeKey);
+  const section = getSectionWithFilteredQuestions(activeKey, projectScope);
   const sectionAnswers = answersByKey[activeKey];
   const summary = summariesByKey[activeKey];
   const isComplete = completedSections.has(activeKey);

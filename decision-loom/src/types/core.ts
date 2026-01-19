@@ -8,6 +8,23 @@ export type SectionKey =
   | "OPERATIONS"
   | "WINS";
 
+export type ProjectScope = "personal" | "mvp" | "production";
+
+export const PROJECT_SCOPE_CONFIG: Record<ProjectScope, { label: string; description: string }> = {
+  personal: {
+    label: "Personal / Hobby",
+    description: "Quick draft, minimal ceremony",
+  },
+  mvp: {
+    label: "MVP",
+    description: "Practical planning for launch",
+  },
+  production: {
+    label: "Production",
+    description: "Operationally complete",
+  },
+};
+
 export type QAItem = {
   questionId: string;
   question: string;

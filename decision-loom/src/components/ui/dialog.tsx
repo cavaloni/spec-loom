@@ -32,13 +32,15 @@ const DialogContent = React.forwardRef<
   <div
     ref={ref}
     className={cn(
-      "relative bg-white rounded-lg shadow-xl border border-[#1C1C1C]/10 p-6",
+      "relative bg-[#F9F7F2] rounded-xl shadow-2xl border border-[#8C7B50]/20 p-0 flex flex-col max-h-[85vh] overflow-hidden",
       className
     )}
     style={{ fontFamily: 'Inter, sans-serif' }}
     {...props}
   >
-    {children}
+    <div className="p-6 flex flex-col h-full overflow-hidden">
+      {children}
+    </div>
   </div>
 ));
 DialogContent.displayName = "DialogContent";
@@ -48,7 +50,7 @@ const DialogHeader = ({
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
-    className={cn("flex flex-col space-y-1.5 text-center sm:text-left mb-4", className)}
+    className={cn("flex flex-col space-y-1.5 text-center sm:text-left mb-4 flex-shrink-0", className)}
     {...props}
   />
 );

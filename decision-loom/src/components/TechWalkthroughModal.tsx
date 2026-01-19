@@ -555,7 +555,7 @@ export function TechWalkthroughModal() {
   return (
     <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center">
       <div
-        className="bg-[#F9F7F2] w-full h-full max-w-6xl max-h-[90vh] flex flex-col shadow-2xl"
+        className="bg-[#F9F7F2] w-full h-full max-w-6xl max-h-[90vh] flex flex-col shadow-2xl rounded-xl border border-[#8C7B50]/20 overflow-hidden"
         style={{ fontFamily: "Inter, sans-serif" }}
       >
         {/* Header */}

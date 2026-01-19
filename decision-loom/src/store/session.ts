@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { SectionKey, QAItem, Artifact, Suggestion } from "@/types/core";
+import type { SectionKey, QAItem, Artifact, Suggestion, ProjectScope } from "@/types/core";
 import { SECTIONS, SECTION_ORDER } from "@/content/questions";
 
 interface ChatMessage {
@@ -12,6 +12,7 @@ interface ChatMessage {
 interface SessionState {
   sessionId: string | null;
   title: string;
+  projectScope: ProjectScope;
   activeKey: SectionKey;
   answersByKey: Record<SectionKey, { qa: QAItem[]; notes: string }>;
   summariesByKey: Record<SectionKey, string>;
@@ -92,6 +93,8 @@ interface SessionActions {
   hasBothArtifactsExported: () => boolean;
   // Tech Walkthrough actions
   setIsTechWalkthroughOpen: (open: boolean) => void;
+  // Scope actions
+  setProjectScope: (scope: ProjectScope) => void;
 }
 
 type SessionStore = SessionState & SessionActions;
@@ -114,6 +117,7 @@ const initialAnswers = (): Record<SectionKey, { qa: QAItem[]; notes: string }> =
 const initialState: SessionState = {
   sessionId: null,
   title: "",
+  projectScope: "mvp",
   activeKey: "CONTEXT",
   answersByKey: initialAnswers(),
   summariesByKey: {} as Record<SectionKey, string>,
@@ -327,12 +331,16 @@ export const useSessionStore = create<SessionStore>()(
 
       // Tech Walkthrough actions
       setIsTechWalkthroughOpen: (open) => set({ isTechWalkthroughOpen: open }),
+
+      // Scope actions
+      setProjectScope: (scope) => set({ projectScope: scope }),
     }),
     {
       name: "decision-loom-session",
       partialize: (state) => ({
         sessionId: state.sessionId,
         title: state.title,
+        projectScope: state.projectScope,
         activeKey: state.activeKey,
         answersByKey: state.answersByKey,
         summariesByKey: state.summariesByKey,

@@ -1,4 +1,4 @@
-import type { SectionKey } from "@/types/core";
+import type { SectionKey, ProjectScope } from "@/types/core";
 
 export type Question = {
   id: string;
@@ -6,6 +6,7 @@ export type Question = {
   placeholder?: string;
   why?: string;
   examples?: string[];
+  minScope: ProjectScope;
 };
 
 export type SectionDefinition = {
@@ -30,6 +31,7 @@ export const SECTIONS: SectionDefinition[] = [
         placeholder:
           "e.g., on-call engineers in a distributed team, support agents, founders, etc.",
         why: "Vague users create vague products. Specificity makes decisions easier.",
+        minScope: "personal",
       },
       {
         id: "context.moment",
@@ -37,6 +39,7 @@ export const SECTIONS: SectionDefinition[] = [
         placeholder:
           "e.g., starting work after a handoff, responding to an incident, reviewing a PR on mobile",
         why: "The moment-of-use determines UI, latency tolerance, and what 'help' means.",
+        minScope: "mvp",
       },
       {
         id: "context.current_workaround",
@@ -44,6 +47,7 @@ export const SECTIONS: SectionDefinition[] = [
         placeholder:
           "e.g., skim Slack + email + tickets, ask coworkers to recap, re-open threads repeatedly",
         why: "Workarounds reveal the real job-to-be-done and adoption constraints.",
+        minScope: "personal",
       },
       {
         id: "context.constraints",
@@ -51,6 +55,7 @@ export const SECTIONS: SectionDefinition[] = [
         placeholder:
           "Time pressure, interruption, fear of mistakes, compliance, device limits, etc.",
         why: "Constraints are often more important than features.",
+        minScope: "mvp",
       },
       {
         id: "context.why_now",
@@ -58,6 +63,7 @@ export const SECTIONS: SectionDefinition[] = [
         placeholder:
           "Team growth, timezone expansion, more tools, higher complexity, new workflows, etc.",
         why: "'Why now' prevents building a timeless but low-urgency product.",
+        minScope: "production",
       },
     ],
   },
@@ -74,6 +80,7 @@ export const SECTIONS: SectionDefinition[] = [
         placeholder:
           "e.g., People lose critical context between shifts and waste time reconstructing what matters.",
         why: "This is your anchor. If it's unclear, everything downstream becomes fuzzy.",
+        minScope: "personal",
       },
       {
         id: "outcome.win_statement",
@@ -81,6 +88,7 @@ export const SECTIONS: SectionDefinition[] = [
         placeholder:
           "e.g., I start my day knowing what matters, why, and exactly where to act in under 5 minutes.",
         why: "Wins should be felt, not just measured.",
+        minScope: "personal",
       },
       {
         id: "outcome.success_metric",
@@ -88,6 +96,7 @@ export const SECTIONS: SectionDefinition[] = [
         placeholder:
           "e.g., time-to-orientation, fewer clarifying pings, fewer reopened threads, higher task completion",
         why: "A leading indicator lets you learn early without waiting for long-term metrics.",
+        minScope: "mvp",
       },
       {
         id: "outcome.non_goals",
@@ -95,6 +104,7 @@ export const SECTIONS: SectionDefinition[] = [
         placeholder:
           "e.g., not replacing Slack, not doing full project management, not automating decisions",
         why: "Non-goals are a senior signal. They prevent accidental scope creep.",
+        minScope: "mvp",
       },
     ],
   },
@@ -111,6 +121,7 @@ export const SECTIONS: SectionDefinition[] = [
         placeholder:
           "1) … 2) … 3) … (think trust, correctness, adoption, privacy, scope, etc.)",
         why: "Ranking forces judgment—some risks matter more than others.",
+        minScope: "mvp",
       },
       {
         id: "risks.unacceptable",
@@ -118,6 +129,7 @@ export const SECTIONS: SectionDefinition[] = [
         placeholder:
           "e.g., missing a critical alert, hallucinating a summary, exposing private info, irreversible action",
         why: "Naming unacceptable failure shapes guardrails and default behavior.",
+        minScope: "mvp",
       },
       {
         id: "risks.mitigations",
@@ -125,6 +137,7 @@ export const SECTIONS: SectionDefinition[] = [
         placeholder:
           "e.g., source citations, user confirmation, read-only mode, minimal permissions, rate limits",
         why: "Mitigation thinking shows you can ship safely, not just ideate.",
+        minScope: "production",
       },
       {
         id: "risks.scope_risk",
@@ -132,6 +145,7 @@ export const SECTIONS: SectionDefinition[] = [
         placeholder:
           "e.g., integrations, custom workflows, edge cases, org-specific logic",
         why: "Most products fail by trying to satisfy everyone too early.",
+        minScope: "production",
       },
     ],
   },
@@ -148,6 +162,7 @@ export const SECTIONS: SectionDefinition[] = [
         placeholder:
           "e.g., calming, decisive, transparent, minimal; not chatty or overwhelming",
         why: "Tone is product behavior. It influences trust and perceived quality.",
+        minScope: "personal",
       },
       {
         id: "experience.visibility",
@@ -155,12 +170,14 @@ export const SECTIONS: SectionDefinition[] = [
         placeholder:
           "e.g., uncertainty, sources, assumptions, next actions, system status",
         why: "Visibility prevents 'magic' and reduces mistrust when things go wrong.",
+        minScope: "mvp",
       },
       {
         id: "experience.friction",
         prompt: "Where should we add friction on purpose (and why)?",
         placeholder: "e.g., confirmations, diff previews, citations, review steps",
         why: "Friction can be a feature when it prevents costly mistakes.",
+        minScope: "production",
       },
       {
         id: "experience.escape",
@@ -168,6 +185,7 @@ export const SECTIONS: SectionDefinition[] = [
         placeholder:
           "e.g., undo, edit, ignore, regenerate, report issue, switch modes",
         why: "Recovery is often more important than correctness.",
+        minScope: "mvp",
       },
     ],
   },
@@ -184,6 +202,7 @@ export const SECTIONS: SectionDefinition[] = [
         placeholder:
           "Step 1… Step 2… (start to finish, including the final 'done' moment)",
         why: "Flow forces concreteness. It reveals missing steps and hidden complexity.",
+        minScope: "personal",
       },
       {
         id: "flow.alt_paths",
@@ -191,6 +210,7 @@ export const SECTIONS: SectionDefinition[] = [
         placeholder:
           "e.g., user has partial info, user is interrupted, user only wants a quick skim",
         why: "Alternate paths are where real products get tested.",
+        minScope: "mvp",
       },
       {
         id: "flow.inputs_outputs",
@@ -198,6 +218,7 @@ export const SECTIONS: SectionDefinition[] = [
         placeholder:
           "Inputs: … Outputs: … (artifacts, messages, actions, notifications)",
         why: "This bridges product intent to implementation boundaries.",
+        minScope: "mvp",
       },
       {
         id: "flow.relevance",
@@ -205,6 +226,7 @@ export const SECTIONS: SectionDefinition[] = [
         placeholder:
           "e.g., ownership, recent mentions, ticket assignment, severity, user preferences",
         why: "Most 'smart' products live or die on relevance and prioritization logic.",
+        minScope: "production",
       },
     ],
   },
@@ -221,6 +243,7 @@ export const SECTIONS: SectionDefinition[] = [
         placeholder:
           "e.g., 3 engineers, 6 weeks, must use existing tools, cannot require org-wide rollout",
         why: "Constraints create the shape of the MVP.",
+        minScope: "mvp",
       },
       {
         id: "limits.mvp_cut",
@@ -228,6 +251,7 @@ export const SECTIONS: SectionDefinition[] = [
         placeholder:
           "e.g., advanced integrations, customization, analytics, long-term storage",
         why: "Great MVPs are defined by what they exclude.",
+        minScope: "mvp",
       },
       {
         id: "limits.latency_budget",
@@ -235,12 +259,14 @@ export const SECTIONS: SectionDefinition[] = [
         placeholder:
           "e.g., <1s for UI actions; <3s for summaries; async for heavy tasks",
         why: "Latency is product behavior—especially when AI or external APIs are involved.",
+        minScope: "production",
       },
       {
         id: "limits.data_access",
         prompt: "What data can we realistically access in v1?",
         placeholder: "e.g., Slack only; GitHub later; no email in MVP",
         why: "Data access constraints define feasibility more than UI does.",
+        minScope: "mvp",
       },
     ],
   },
@@ -257,6 +283,7 @@ export const SECTIONS: SectionDefinition[] = [
         placeholder:
           "e.g., error rate, latency, API failures, job backlog, suggestion rejection rate",
         why: "If you can't monitor it, you can't operate it.",
+        minScope: "production",
       },
       {
         id: "ops.rollout",
@@ -264,6 +291,7 @@ export const SECTIONS: SectionDefinition[] = [
         placeholder:
           "e.g., internal pilot, feature flags, gradual enablement, opt-in",
         why: "Rollout is a product decision and a risk mitigation strategy.",
+        minScope: "production",
       },
       {
         id: "ops.support",
@@ -271,6 +299,7 @@ export const SECTIONS: SectionDefinition[] = [
         placeholder:
           "e.g., feedback button, error reports, minimal admin view, logs only",
         why: "Support posture prevents a small MVP from becoming an ops nightmare.",
+        minScope: "production",
       },
     ],
   },
@@ -287,6 +316,7 @@ export const SECTIONS: SectionDefinition[] = [
         placeholder:
           "e.g., weekly active usage, time-to-first-success, completion rate, retention",
         why: "One core metric prevents scattered optimization.",
+        minScope: "mvp",
       },
       {
         id: "wins.leading_signals",
@@ -294,6 +324,7 @@ export const SECTIONS: SectionDefinition[] = [
         placeholder:
           "e.g., fewer pings for context, fewer reopenings, higher completion, lower time-to-orientation",
         why: "Leading signals allow fast iteration without waiting months.",
+        minScope: "production",
       },
       {
         id: "wins.kill_criteria",
@@ -301,6 +332,7 @@ export const SECTIONS: SectionDefinition[] = [
         placeholder:
           "e.g., low repeat usage, users distrust summaries, high correction rates, integration friction",
         why: "Kill criteria are a senior product signal: you're not attached to the idea.",
+        minScope: "production",
       },
       {
         id: "wins.next_iteration",
@@ -308,6 +340,7 @@ export const SECTIONS: SectionDefinition[] = [
         placeholder:
           "e.g., add one integration, add personalization, add team mode, add export formats",
         why: "Shows you can think beyond MVP without overbuilding it.",
+        minScope: "mvp",
       },
     ],
   },
@@ -319,4 +352,29 @@ export function getSection(key: SectionKey): SectionDefinition {
   const section = SECTIONS.find((s) => s.key === key);
   if (!section) throw new Error(`Unknown section key: ${key}`);
   return section;
+}
+
+const SCOPE_LEVELS: Record<ProjectScope, number> = {
+  personal: 0,
+  mvp: 1,
+  production: 2,
+};
+
+export function getFilteredQuestions(
+  section: SectionDefinition,
+  scope: ProjectScope
+): Question[] {
+  const scopeLevel = SCOPE_LEVELS[scope];
+  return section.questions.filter((q) => SCOPE_LEVELS[q.minScope] <= scopeLevel);
+}
+
+export function getSectionWithFilteredQuestions(
+  key: SectionKey,
+  scope: ProjectScope
+): SectionDefinition {
+  const section = getSection(key);
+  return {
+    ...section,
+    questions: getFilteredQuestions(section, scope),
+  };
 }
