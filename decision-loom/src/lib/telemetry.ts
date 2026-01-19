@@ -1,5 +1,4 @@
 import { NodeSDK } from "@opentelemetry/sdk-node";
-import { getNodeAutoInstrumentations } from "@opentelemetry/auto-instrumentations-node";
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
 import { resourceFromAttributes } from "@opentelemetry/resources";
 import { ATTR_SERVICE_NAME, ATTR_SERVICE_VERSION } from "@opentelemetry/semantic-conventions";
@@ -38,13 +37,6 @@ export function initTelemetry() {
       [ATTR_SERVICE_VERSION]: SERVICE_VERSION,
     }),
     traceExporter,
-    instrumentations: [
-      getNodeAutoInstrumentations({
-        // Disable some noisy instrumentations
-        "@opentelemetry/instrumentation-fs": { enabled: false },
-        "@opentelemetry/instrumentation-dns": { enabled: false },
-      }),
-    ],
   });
 
   sdk.start();

@@ -1,4 +1,5 @@
 import pino from "pino";
+import pretty from "pino-pretty";
 
 const isDev = process.env.NODE_ENV !== "production";
 
@@ -23,19 +24,14 @@ export const logger = pino({
     ],
     censor: "[REDACTED]",
   },
-  ...(isDev
-    ? {
-        transport: {
-          target: "pino-pretty",
-          options: {
-            colorize: true,
-            translateTime: "HH:MM:ss",
-            ignore: "pid,hostname",
-          },
-        },
-      }
-    : {}),
-});
+},
+isDev
+  ? pretty({
+      colorize: true,
+      translateTime: "HH:MM:ss",
+      ignore: "pid,hostname",
+    })
+  : undefined);
 
 /**
  * Create a child logger with request context (requestId, route, etc.)

@@ -41,6 +41,8 @@ interface SessionState {
   reflectionContent: string | null;
   isReflectionModalOpen: boolean;
   reflectionExpanded: boolean;
+  // Tech Walkthrough state
+  isTechWalkthroughOpen: boolean;
 }
 
 interface SessionActions {
@@ -88,6 +90,8 @@ interface SessionActions {
   setIsReflectionModalOpen: (open: boolean) => void;
   setReflectionExpanded: (expanded: boolean) => void;
   hasBothArtifactsExported: () => boolean;
+  // Tech Walkthrough actions
+  setIsTechWalkthroughOpen: (open: boolean) => void;
 }
 
 type SessionStore = SessionState & SessionActions;
@@ -135,6 +139,7 @@ const initialState: SessionState = {
   reflectionContent: null,
   isReflectionModalOpen: false,
   reflectionExpanded: false,
+  isTechWalkthroughOpen: false,
 };
 
 export const useSessionStore = create<SessionStore>()(
@@ -319,6 +324,9 @@ export const useSessionStore = create<SessionStore>()(
         const { prdCopied, techSpecCopied, prdDownloaded, techSpecDownloaded } = get();
         return (prdCopied || prdDownloaded) && (techSpecCopied || techSpecDownloaded);
       },
+
+      // Tech Walkthrough actions
+      setIsTechWalkthroughOpen: (open) => set({ isTechWalkthroughOpen: open }),
     }),
     {
       name: "decision-loom-session",

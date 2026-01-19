@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Landing } from "@/components/Landing";
 import { ReflectionModal } from "@/components/ReflectionModal";
 import { CoreflowLoader } from "@/components/CoreflowLoader";
+import { TechWalkthroughModal } from "@/components/TechWalkthroughModal";
 import { useSessionStore } from "@/store/session";
 import { RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -64,6 +65,7 @@ export default function Home() {
     </div>
     <ReflectionModal />
     <CoreflowLoader />
+    <TechWalkthroughModal />
     </>
   );
 }

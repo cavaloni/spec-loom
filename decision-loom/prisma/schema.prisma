@@ -16,9 +16,10 @@ model Session {
   activeKey           String   @default("CONTEXT")
   productDescription  String?
 
-  sections  SectionAnswer[]
-  summaries SectionSummary[]
-  artifacts Artifact[]
+  sections       SectionAnswer[]
+  summaries      SectionSummary[]
+  artifacts      Artifact[]
+  techWalkthrough TechWalkthrough?
 
   @@index([expiresAt])
 }
@@ -67,4 +68,81 @@ model Artifact {
   session Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 
   @@index([sessionId, type])
+}
+
+model TechWalkthrough {
+  id        String   @id @default(cuid())
+  sessionId String   @unique
+  status    String   @default("in_progress") // in_progress, completed
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  session        Session                    @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  drivers        ArchitectureDriverAnswer[]
+  decisions      ArchitectureDecision[]
+  agenticProfile AgenticProfile?
+}
+
+model AgenticProfile {
+  id            String @id @default(cuid())
+  walkthroughId String @unique
+
+  // Core mode: none, assistive, semi_autonomous, autonomous
+  agenticMode String @default("none")
+
+  // Orchestration shape (only relevant if not "none")
+  orchestrationShape String? // single_agent, multi_agent_collaborative, multi_agent_specialist
+
+  // Tool/action surface
+  toolCapabilities String? // JSON array: ["text_only", "tool_calls", "external_actions"]
+
+  // Memory requirements
+  memoryRequirements String? // none, session_only, long_term
+
+  // Guardrails contract
+  humanApprovalRequired String? // JSON array of what needs approval: ["tool_calls", "external_actions", "data_access"]
+  guardrailsNotes       String? // Free text for additional constraints
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  walkthrough TechWalkthrough @relation(fields: [walkthroughId], references: [id], onDelete: Cascade)
+}
+
+model ArchitectureDriverAnswer {
+  id            String @id @default(cuid())
+  walkthroughId String
+  questionKey   String // unit_of_work, scale_shape, latency_contract, etc.
+  answer        String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  walkthrough TechWalkthrough @relation(fields: [walkthroughId], references: [id], onDelete: Cascade)
+
+  @@unique([walkthroughId, questionKey])
+  @@index([walkthroughId])
+}
+
+model ArchitectureDecision {
+  id                       String  @id @default(cuid())
+  walkthroughId            String
+  title                    String
+  area                     String // data_storage, compute_strategy, ux_contract, state_sync, interfaces, risk_controls, operations
+  chosenOption             String
+  alternatives             String // JSON array
+  tradeoffs                String
+  userVisibleConsequence   String
+  mvpImpact                String
+  openQuestions            String
+  status                   String  @default("tentative") // tentative, approved
+  sortOrder                Int     @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  walkthrough TechWalkthrough @relation(fields: [walkthroughId], references: [id], onDelete: Cascade)
+
+  @@index([walkthroughId])
 }

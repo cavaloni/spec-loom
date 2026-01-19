@@ -16,6 +16,8 @@ import {
   Maximize2,
   Minimize2,
   Copy,
+  Compass,
+  Zap,
 } from "lucide-react";
 import type { Artifact } from "@/types/core";
 import { ChatRefinement } from "@/components/ChatRefinement";
@@ -44,6 +46,7 @@ export function ArtifactPreview() {
     setTechSpecDownloaded,
     setIsReflectionModalOpen,
     hasBothArtifactsExported,
+    setIsTechWalkthroughOpen,
   } = useSessionStore();
 
   const [activeTab, setActiveTab] = useState<"prd" | "tech-spec">("prd");
@@ -319,9 +322,41 @@ export function ArtifactPreview() {
                 </h3>
                 <p className="mb-4 text-sm" style={{ fontFamily: 'Inter, sans-serif', color: 'rgba(28, 28, 28, 0.6)' }}>
                   {prdArtifact
-                    ? "Click below to generate your Tech Spec"
+                    ? "Choose how to generate your Tech Spec"
                     : "Generate PRD first"}
                 </p>
+                {prdArtifact && (
+                  <div className="flex flex-col gap-3 w-full max-w-xs">
+                    <Button
+                      onClick={() => setIsTechWalkthroughOpen(true)}
+                      className="w-full"
+                      style={{
+                        fontFamily: 'Libre Baskerville, serif',
+                        borderRadius: '0',
+                        backgroundColor: '#1C1C1C',
+                        color: '#F9F7F2'
+                      }}
+                    >
+                      <Compass className="mr-2 h-4 w-4" />
+                      Tech Spec Guide
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={handleGenerateTechSpec}
+                      disabled={isGenerating}
+                      className="w-full"
+                      style={{
+                        fontFamily: 'Libre Baskerville, serif',
+                        borderRadius: '0',
+                        borderColor: 'rgba(28, 28, 28, 0.15)',
+                        color: '#1C1C1C'
+                      }}
+                    >
+                      <Zap className="mr-2 h-4 w-4" />
+                      Quick Generate
+                    </Button>
+                  </div>
+                )}
               </>
             )}
           </div>
@@ -441,6 +476,21 @@ export function ArtifactPreview() {
                     <Download className="h-4 w-4" />
                   </Button>
                 </>
+              )}
+              {techSpecArtifact && (
+                <Button
+                  variant="outline"
+                  onClick={() => setIsTechWalkthroughOpen(true)}
+                  style={{
+                    fontFamily: 'Libre Baskerville, serif',
+                    borderRadius: '0',
+                    borderColor: 'rgba(28, 28, 28, 0.15)',
+                    color: '#1C1C1C'
+                  }}
+                  title="Open Tech Spec Guide"
+                >
+                  <Compass className="h-4 w-4" />
+                </Button>
               )}
             </>
           )}
